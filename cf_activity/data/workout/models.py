@@ -1,12 +1,13 @@
 import uuid
 
 from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, ForeignKey, \
-    MetaData, UUID, text
+    Integer, MetaData, String, Text, UUID, UniqueConstraint, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 from data import NAMING_CONVENTION
-from data.datasets.models import Difficulty, TrainingTypes
+from data.datasets.models import Difficulty, ExerciseType, ExercisesSetType, \
+    TrainingTypes
 from data.user.models import User
 
 SCHEMA_WORKOUT = 'workout'
@@ -20,15 +21,14 @@ class WorkoutOfDay(WorkoutBase):
     __tablename__ = 'workout_of_day'
 
     rid = Column(
-        'идентификатор тренировки', UUID(as_uuid=True),
-        default=uuid.uuid4, primary_key=True
+        UUID(as_uuid=True), primary_key=True,
+        default=uuid.uuid4, comment='идентификатор тренировки'
     )
     base_wod_rid = Column(
         UUID(as_uuid=True),
         ForeignKey('workout_of_day.rid', ondelete='RESTRICT'),
         nullable=True, comment='идентификатор тренировки от тренера'
     )
-    base_wod = relationship('WorkoutOfDay', backref='child_wods')
     training_type = Column(
         Enum(TrainingTypes),
         default=TrainingTypes.ENDURANCE, nullable=False,
@@ -47,112 +47,149 @@ class WorkoutOfDay(WorkoutBase):
         DateTime, server_default=text('CURRENT_TIMESTAMP'),
         comment='дата создания тренировки'
     )
-    user = Column(
+    user_id = Column(
         BigInteger, ForeignKey(User.id, ondelete='CASCADE'),
     )
-#
-#
-# class ExercisesSet(WorkoutBase):
-#     rid = models.UUIDField(
-#         'идентификатор комплекса', default=uuid.uuid4, primary_key=True
-#     )
-#     user = models.ForeignKey(
-#         User, on_delete=models.CASCADE, related_name='sets'
-#     )
-#     wod = models.ForeignKey(
-#         WorkoutOfDay, on_delete=models.PROTECT, related_name='sets'
-#     )
-#     set_type = models.ForeignKey(
-#         ExercisesSetType, on_delete=models.PROTECT
-#     )
-#     rounds = models.PositiveSmallIntegerField(
-#         'количество раундов', null=True
-#     )
-#     duration_minutes = models.PositiveSmallIntegerField(
-#         'длительность выполнения комплекса', null=True
-#     )
-#     set_number = models.PositiveSmallIntegerField(
-#         'порядковый номер комплекса в тренировке'
-#     )
-#     comment = models.TextField('комментарий к комплексу', null=True,
-#                                max_length=300)
-#
-#     class Meta:
-#         ordering = ('set_number',)
-#         verbose_name = 'комплекс'
-#         verbose_name_plural = 'комплексы'
-#         db_table = 'workout.exercises_set'
-#         constraints = [
-#             models.UniqueConstraint(fields=['wod', 'user', 'set_number'],
-#                                     name='wod_user_set_num_uq')
-#         ]
-#
-#
-# class Exercise(WorkoutBase):
-#     rid = models.UUIDField(
-#         'идентификатор упражнения', default=uuid.uuid4, primary_key=True
-#     )
-#     user = models.ForeignKey(
-#         User, on_delete=models.CASCADE, related_name='exercises'
-#     )
-#     set = models.ForeignKey(
-#         ExercisesSet, on_delete=models.PROTECT, related_name='exercises'
-#     )
-#     exercise_number = models.PositiveSmallIntegerField(
-#         'порядковый номер упражнения в комплексе'
-#     )
-#     exercise_type = models.ForeignKey(
-#         ExerciseType, on_delete=models.PROTECT
-#     )
-#     weight = models.PositiveSmallIntegerField(
-#         'вес', null=True
-#     )
-#     reps_count = models.PositiveSmallIntegerField(
-#         'количество повторений', null=True
-#     )
-#     rounds = models.PositiveSmallIntegerField(
-#         'количество подходов', null=True
-#     )
-#     duration_minutes = models.PositiveSmallIntegerField(
-#         'длительность выполнения', null=True
-#     )
-#     comment = models.TextField('комментарий к упражнению', null=True,
-#                                max_length=300)
-#
-#     class Meta:
-#         ordering = ('exercise_number',)
-#         verbose_name = 'упражнение'
-#         verbose_name_plural = 'упражнения'
-#         db_table = 'workout.exercise'
-#         constraints = [
-#             models.UniqueConstraint(fields=['set', 'user', 'exercise_number'],
-#                                     name='set_user_exercise_num_uq')
-#         ]
-#
-#
-# class ExerciseResults(WorkoutBase):
-#     exercise = models.ForeignKey(
-#         Exercise, on_delete=models.CASCADE, related_name='results'
-#     )
-#     round_number = models.PositiveSmallIntegerField(
-#         'номер подхода'
-#     )
-#     weight = models.PositiveSmallIntegerField(
-#         'вес', null=True
-#     )
-#     duration_minutes = models.PositiveSmallIntegerField(
-#         'длительность выполнения', null=True
-#     )
-#     comment = models.TextField('комментарий к подходу', null=True,
-#                                max_length=300)
-#
-#     class Meta:
-#         ordering = ('round_number',)
-#         verbose_name = 'подход'
-#         verbose_name_plural = 'подходы'
-#         db_table = 'workout.exercise_result'
-#         constraints = [
-#             models.UniqueConstraint(fields=['exercise', 'round_number'],
-#                                     name='exercise_res_uq')
-#         ]
-#
+
+    base_wod = relationship('WorkoutOfDay', backref='child_wods')
+    user = relationship('User', backref='wods')
+
+
+class ExercisesSet(WorkoutBase):
+    __tablename__ = 'exercises_set'
+
+    rid = Column(
+        UUID(as_uuid=True), primary_key=True,
+        default=uuid.uuid4, comment='идентификатор комплекса'
+    )
+    wod_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('workout_of_day.rid', ondelete='CASCADE'),
+        nullable=True, comment=(
+            'идентификатор тренировки, в которую входит комплекс')
+    )
+    set_number = Column(
+        Integer, nullable=True,
+        comment='порядковый номер комплекса в тренировке'
+    )
+    set_type_slug = Column(
+        String, ForeignKey(ExercisesSetType.slug_name, ondelete='RESTRICT'),
+        nullable=True, comment=(
+            'slug названия комплекса')
+    )
+    rounds = Column(
+        Integer, nullable=True, comment='количество раундов'
+    )
+    duration_minutes = Column(
+        Integer, nullable=True, comment='длительность выполнения комплекса'
+    )
+    comment = Column(
+        Text, nullable=True, comment='комментарий к комплексу'
+    )
+
+    __table_args__ = (
+        UniqueConstraint('wod_id', 'set_number',
+                         name='wod_set_num_uq'),
+    )
+
+
+class Exercise(WorkoutBase):
+    __tablename__ = 'exercise'
+
+    rid = Column(
+        UUID(as_uuid=True), primary_key=True,
+        default=uuid.uuid4, comment='идентификатор упражнения'
+    )
+    set_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(ExercisesSet.rid, ondelete='CASCADE'),
+        nullable=True, comment=(
+            'идентификатор комплекса, в который входит упражнение')
+    )
+    exercise_number = Column(
+        Integer, nullable=True,
+        comment='порядковый номер упражнения в комплексе'
+    )
+    exercise_type = Column(
+        String, ForeignKey(ExerciseType.slug_name, ondelete='RESTRICT'),
+        nullable=False, comment='slug типа тренировки'
+    )
+    rounds = Column(
+        Integer, nullable=True, comment='количество раундов'
+    )
+    weight = Column(
+        Integer, nullable=True,
+        comment='вес снаряда / дополнительного груза'
+    )
+    reps_count = Column(
+        Integer, nullable=True,
+        comment='количество повторений'
+    )
+    duration_minutes = Column(
+        Integer, nullable=True,
+        comment='длительность выполнения'
+    )
+    comment = Column(
+        Text, nullable=True, comment='комментарий к упражнению'
+    )
+
+    __table_args__ = (
+        UniqueConstraint('set_id', 'exercise_number',
+                         name='set_exercise_num_uq'),
+    )
+
+
+class SetResults(WorkoutBase):
+    __tablename__ = 'set_result'
+
+    set_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(ExercisesSet.rid, ondelete='CASCADE'),
+        nullable=True, comment=(
+            'идентификатор комплекса, для которого записывается результат')
+    )
+    duration_minutes = Column(
+        Integer, nullable=True,
+        comment='длительность выполнения'
+    )
+    comment = Column(
+        Text, nullable=True, comment='комментарий к результату комплекса'
+    )
+
+    __table_args__ = (
+        UniqueConstraint('set_id', name='exercises_set_res_uq'),
+    )
+
+
+class ExerciseResults(WorkoutBase):
+    __tablename__ = 'exercise_result'
+
+    exercise_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(Exercise.rid, ondelete='CASCADE'),
+        nullable=True, comment=(
+            'идентификатор упражнения, для которого записывается результат')
+    )
+    round_number = Column(
+        Integer, nullable=True, comment='номер подхода'
+    )
+    weight = Column(
+        Integer, nullable=True,
+        comment='вес снаряда / дополнительного груза'
+    )
+    reps_count = Column(
+        Integer, nullable=True,
+        comment='количество повторений'
+    )
+    duration_minutes = Column(
+        Integer, nullable=True,
+        comment='длительность выполнения'
+    )
+    comment = Column(
+        Text, nullable=True, comment='комментарий к результату упражнения'
+    )
+
+    __table_args__ = (
+        UniqueConstraint('exercise_id', 'round_number',
+                         name='exercise_round_res_uq'),
+    )
