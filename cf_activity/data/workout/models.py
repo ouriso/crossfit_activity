@@ -2,6 +2,7 @@ import uuid
 
 from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, ForeignKey, \
     Integer, MetaData, String, Text, UUID, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -142,11 +143,10 @@ class Exercise(WorkoutBase):
 class SetResults(WorkoutBase):
     __tablename__ = 'set_result'
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
     set_id = Column(
         UUID(as_uuid=True),
         ForeignKey(ExercisesSet.rid, ondelete='CASCADE'),
-        nullable=True, comment=(
+        primary_key=True, comment=(
             'идентификатор комплекса, для которого записывается результат')
     )
     duration_minutes = Column(
@@ -157,41 +157,28 @@ class SetResults(WorkoutBase):
         Text, nullable=True, comment='комментарий к результату комплекса'
     )
 
-    __table_args__ = (
-        UniqueConstraint('set_id', name='exercises_set_res_uq'),
-    )
-
 
 class ExerciseResults(WorkoutBase):
     __tablename__ = 'exercise_result'
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
     exercise_id = Column(
         UUID(as_uuid=True),
         ForeignKey(Exercise.rid, ondelete='CASCADE'),
-        nullable=True, comment=(
+        primary_key=True, comment=(
             'идентификатор упражнения, для которого записывается результат')
     )
-    round_number = Column(
-        Integer, nullable=True, comment='номер подхода'
+    weights = Column(
+        ARRAY(Integer), nullable=True,
+        comment='список весов снаряда / дополнительного груза в каждом подходе'
     )
-    weight = Column(
-        Integer, nullable=True,
-        comment='вес снаряда / дополнительного груза'
-    )
-    reps_count = Column(
-        Integer, nullable=True,
-        comment='количество повторений'
+    reps_counts = Column(
+        ARRAY(Integer), nullable=True,
+        comment='список количества повторений в каждом подходе'
     )
     duration_minutes = Column(
-        Integer, nullable=True,
-        comment='длительность выполнения'
+        ARRAY(Integer), nullable=True,
+        comment='список длительности выполнения в каждом подходе'
     )
     comment = Column(
         Text, nullable=True, comment='комментарий к результату упражнения'
-    )
-
-    __table_args__ = (
-        UniqueConstraint('exercise_id', 'round_number',
-                         name='exercise_round_res_uq'),
     )
