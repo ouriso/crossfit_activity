@@ -142,6 +142,7 @@ class Exercise(WorkoutBase):
 class SetResults(WorkoutBase):
     __tablename__ = 'set_result'
 
+    id = Column(UUID(as_uuid=True), primary_key=True)
     set_id = Column(
         UUID(as_uuid=True),
         ForeignKey(ExercisesSet.rid, ondelete='CASCADE'),
@@ -164,6 +165,7 @@ class SetResults(WorkoutBase):
 class ExerciseResults(WorkoutBase):
     __tablename__ = 'exercise_result'
 
+    id = Column(UUID(as_uuid=True), primary_key=True)
     exercise_id = Column(
         UUID(as_uuid=True),
         ForeignKey(Exercise.rid, ondelete='CASCADE'),
