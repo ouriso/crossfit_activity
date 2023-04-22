@@ -41,7 +41,7 @@ class WorkoutOfDay(WorkoutBase):
     )
     action_date = Column(
         Date, default=text('CURRENT_TIMESTAMP'),
-        comment='дата проведения тренировки', auto_created=True
+        comment='дата проведения тренировки', nullable=False
     )
     creation_date = Column(
         DateTime, server_default=text('CURRENT_TIMESTAMP'),
