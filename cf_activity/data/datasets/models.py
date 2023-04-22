@@ -1,6 +1,7 @@
+from enum import Enum
+
 from slugify import slugify
-from sqlalchemy import Column, MetaData, String, Text, event
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy import Column, MetaData, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 from data import NAMING_CONVENTION
@@ -42,18 +43,16 @@ class ExercisesSetType(BaseDatasetEntity):
     __tablename__ = 'exercises_set_type'
 
 
-Difficulty = ENUM(
-    'easy',
-    'normal',
-    'hard',
-    'hell',
-    name='difficulty'
-)
+class Difficulty(Enum):
+    EASY = 'easy'
+    NORMAL = 'normal'
+    HARD = 'hard'
+    HELL = 'hell'
 
-TrainingTypes = ENUM(
-    'power',
-    'endurance',
-    'full_body',
-    'gymnastics',
-    name='training_types'
-)
+
+class TrainingTypes(Enum):
+    POWER = 'power'
+    ENDURANCE = 'endurance'
+    FULL_BODY = 'full_body'
+    GYM = 'gymnastics'
+
