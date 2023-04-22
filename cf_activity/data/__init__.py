@@ -3,12 +3,12 @@ from os import getenv
 from sqlalchemy import URL, create_engine
 
 db_url = URL.create(
-    'postgresql+psycopg3',
-    username=getenv('PSG_USER'),
-    password=getenv('PSG_PASS'),
-    host=getenv('PSG_HOST'),
-    port=getenv('PSG_PORT'),
-    database=getenv('PSG_DB')
+    getenv('DB_DRIVER', 'postgresql+psycopg'),
+    username=getenv('DB_USER'),
+    password=getenv('DB_PASS'),
+    host=getenv('DB_HOST'),
+    port=getenv('DB_PORT'),
+    database=getenv('DB_NAME')
 )
 
 engine = create_engine(db_url)
