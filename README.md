@@ -48,3 +48,20 @@
 ### Упражнения
 Комплексы являются частью комплекса.
 Создается с привязкой к комплексу и конкретному пользователю.
+
+
+# Docker
+```
+docker run --name postgres \
+       -e POSTGRES_PASSWORD=ouriso \
+       -e PGUSER=postgres \
+       -p 5432:5432 \
+       -v pgdata:/var/lib/postgresql/data \
+       -d postgres:15.2-alpine
+```
+
+# Alembic
+```
+alembic revision --autogenerate
+alembic upgrade head 
+```
