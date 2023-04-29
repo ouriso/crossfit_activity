@@ -21,13 +21,13 @@ WorkoutBase = declarative_base(metadata=metadata_workout)
 class WorkoutOfDay(WorkoutBase):
     __tablename__ = 'workout_of_day'
 
-    rid = Column(
+    id = Column(
         UUID(as_uuid=True), primary_key=True,
         default=uuid.uuid4, comment='идентификатор тренировки'
     )
-    base_wod_rid = Column(
+    base_wod_id = Column(
         UUID(as_uuid=True),
-        ForeignKey('workout_of_day.rid', ondelete='RESTRICT'),
+        ForeignKey('workout_of_day.id', ondelete='RESTRICT'),
         nullable=True, comment='идентификатор тренировки от тренера'
     )
     training_type = Column(
@@ -59,13 +59,13 @@ class WorkoutOfDay(WorkoutBase):
 class ExercisesSet(WorkoutBase):
     __tablename__ = 'exercises_set'
 
-    rid = Column(
+    id = Column(
         UUID(as_uuid=True), primary_key=True,
         default=uuid.uuid4, comment='идентификатор комплекса'
     )
     wod_id = Column(
         UUID(as_uuid=True),
-        ForeignKey('workout_of_day.rid', ondelete='CASCADE'),
+        ForeignKey(WorkoutOfDay.id, ondelete='CASCADE'),
         nullable=True, comment=(
             'идентификатор тренировки, в которую входит комплекс')
     )
@@ -73,10 +73,10 @@ class ExercisesSet(WorkoutBase):
         Integer, nullable=True,
         comment='порядковый номер комплекса в тренировке'
     )
-    set_type_slug = Column(
-        String, ForeignKey(ExercisesSetType.slug_name, ondelete='RESTRICT'),
+    set_type_id = Column(
+        Integer, ForeignKey(ExercisesSetType.id, ondelete='RESTRICT'),
         nullable=True, comment=(
-            'slug названия комплекса')
+            'id названия комплекса')
     )
     rounds = Column(
         Integer, nullable=True, comment='количество раундов'
@@ -97,13 +97,13 @@ class ExercisesSet(WorkoutBase):
 class Exercise(WorkoutBase):
     __tablename__ = 'exercise'
 
-    rid = Column(
+    id = Column(
         UUID(as_uuid=True), primary_key=True,
         default=uuid.uuid4, comment='идентификатор упражнения'
     )
     set_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(ExercisesSet.rid, ondelete='CASCADE'),
+        ForeignKey(ExercisesSet.id, ondelete='CASCADE'),
         nullable=True, comment=(
             'идентификатор комплекса, в который входит упражнение')
     )
@@ -111,9 +111,9 @@ class Exercise(WorkoutBase):
         Integer, nullable=True,
         comment='порядковый номер упражнения в комплексе'
     )
-    exercise_type = Column(
-        String, ForeignKey(ExerciseType.slug_name, ondelete='RESTRICT'),
-        nullable=False, comment='slug типа тренировки'
+    exercise_type_id = Column(
+        Integer, ForeignKey(ExerciseType.id, ondelete='RESTRICT'),
+        nullable=False, comment='id типа тренировки'
     )
     rounds = Column(
         Integer, nullable=True, comment='количество раундов'
@@ -145,7 +145,7 @@ class SetResults(WorkoutBase):
 
     set_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(ExercisesSet.rid, ondelete='CASCADE'),
+        ForeignKey(ExercisesSet.id, ondelete='CASCADE'),
         primary_key=True, comment=(
             'идентификатор комплекса, для которого записывается результат')
     )
@@ -163,7 +163,7 @@ class ExerciseResults(WorkoutBase):
 
     exercise_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(Exercise.rid, ondelete='CASCADE'),
+        ForeignKey(Exercise.id, ondelete='CASCADE'),
         primary_key=True, comment=(
             'идентификатор упражнения, для которого записывается результат')
     )

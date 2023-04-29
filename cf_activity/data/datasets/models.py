@@ -1,7 +1,6 @@
 from enum import Enum
 
-from slugify import slugify
-from sqlalchemy import Column, MetaData, String, Text
+from sqlalchemy import Column, Identity, Integer, MetaData, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 from data import NAMING_CONVENTION
@@ -16,21 +15,16 @@ DatasetBase = declarative_base(metadata=metadata_dataset)
 class BaseDatasetEntity(DatasetBase):
     __abstract__ = True
 
+    id = Column(Integer, Identity(always=True), primary_key=True)
     name = Column(String, nullable=False, unique=True)
-    slug_name = Column(String, primary_key=True)
+    slug_name = Column(String, nullable=False, unique=True)
     description = Column(Text, nullable=True)
 
-    @staticmethod
-    def generate_slug_name(target, value, oldvalue, initiator):
-        if value and (not target.slug_name or value != oldvalue):
-            target.slug_name = slugify(value)
 
-
-# slugify slug_name on creating new instance
-event.listen(
-    BaseDatasetEntity.name, 'set',
-    BaseDatasetEntity.generate_slug_name, retval=False
-)
+# @event.listens_for(BaseDatasetEntity.name, 'set')
+# def generate_slug_name(target, value, oldvalue, initiator):
+#     if value and (not target.slug_name or value != oldvalue):
+#         target.slug_name = slugify(value)
 
 
 class ExerciseType(BaseDatasetEntity):
@@ -55,4 +49,3 @@ class TrainingTypes(Enum):
     ENDURANCE = 'endurance'
     FULL_BODY = 'full_body'
     GYM = 'gymnastics'
-
