@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, ForeignKey, \
-    Integer, MetaData, String, Text, UUID, UniqueConstraint, text
+    Integer, MetaData, Text, UUID, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -54,6 +54,7 @@ class WorkoutOfDay(WorkoutBase):
 
     base_wod = relationship('WorkoutOfDay', backref='child_wods')
     user = relationship('User', backref='wods')
+    sets = relationship('ExercisesSet', backref='wod')
 
 
 class ExercisesSet(WorkoutBase):
@@ -87,6 +88,8 @@ class ExercisesSet(WorkoutBase):
     comment = Column(
         Text, nullable=True, comment='комментарий к комплексу'
     )
+    exercises = relationship('Exercise', backref='set')
+    results = relationship('SetResults', backref='set')
 
     __table_args__ = (
         UniqueConstraint('wod_id', 'set_number',
@@ -133,6 +136,7 @@ class Exercise(WorkoutBase):
     comment = Column(
         Text, nullable=True, comment='комментарий к упражнению'
     )
+    results = relationship('ExerciseResults', backref='exercise')
 
     __table_args__ = (
         UniqueConstraint('set_id', 'exercise_number',
