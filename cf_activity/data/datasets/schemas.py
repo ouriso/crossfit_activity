@@ -6,12 +6,12 @@ from slugify import slugify
 
 class DatasetBase(BaseModel):
     name: str
-    slug_name: str
+    slug_name: Optional[str]
     description: Optional[str]
 
     @classmethod
     @validator('slug_name', pre=True, always=True)
-    def check_slug(cls, v, *, values, **kwargs):
+    def check_slug(cls, v, *, values):
         return v or slugify(values['name'])
 
 
