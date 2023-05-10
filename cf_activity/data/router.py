@@ -5,7 +5,10 @@ from data import get_session
 from data.datasets.crud import ExerciseTypeManager
 from data.datasets.schemas import ExerciseTypeCreate, ExerciseTypeSchema
 
-router_wod = APIRouter()
+router_ds = APIRouter(
+    prefix='/datasets',
+)
+
 
 
 @router_wod.get('/exercises/', response_model=list[ExerciseTypeSchema])

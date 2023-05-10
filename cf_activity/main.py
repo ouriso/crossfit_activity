@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 
-from data.router import router_wod
+from data.router import router_ds
 
 app = FastAPI()
-app.include_router(router_wod)
+app.include_router(router_ds)
 
 
 @app.get("/")
