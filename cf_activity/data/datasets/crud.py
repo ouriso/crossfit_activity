@@ -20,20 +20,20 @@ class BaseManager(ABC):
         result = await async_session.execute(
             select(cls.orm_model).filter_by(id=model_id)
         )
-        return result.scalar().first()
+        return result.scalar()
 
     @classmethod
     async def get_objects_by_name(
-            cls, async_session: AsyncSession, name: str = None
+            cls, name: str, async_session: AsyncSession
     ) -> list[Type[orm_model]]:
         slug = slugify(name)
         result = await async_session.execute(
             select(cls.orm_model).filter(or_(
-                cls.orm_model.name == name,
-                cls.orm_model.slug_name == slug
+                cls.orm_model.name.startswith(name),
+                cls.orm_model.slug_name.startswith(slug)
             ))
         )
-        return list(result.all())
+        return list(result.scalars())
 
     @classmethod
     async def get_objects_list(

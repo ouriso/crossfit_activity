@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data import get_session
@@ -10,15 +10,30 @@ router_ds = APIRouter(
 )
 
 
+@router_ds.get('/exercises/{exercise_id}', response_model=ExerciseTypeSchema)
+async def get_exercise(
+        exercise_id: int, session: AsyncSession = Depends(get_session)
+):
+    exercise = await ExerciseTypeManager.get_object_by_id(session, exercise_id)
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    return exercise
 
-@router_wod.get('/exercises/', response_model=list[ExerciseTypeSchema])
-async def get_exercises(session: AsyncSession = Depends(get_session)):
-    exercises = await ExerciseTypeManager.get_objects_list(session)
-    # return [ExerciseTypeSchema.from_orm(exc) for exc in exercises]
+
+@router_ds.get('/exercises/', response_model=list[ExerciseTypeSchema])
+async def get_exercises_list(
+        session: AsyncSession = Depends(get_session), name: str = None
+):
+    if name:
+        exercises = await ExerciseTypeManager.get_objects_by_name(
+            name, session
+        )
+    else:
+        exercises = await ExerciseTypeManager.get_objects_list(session)
     return exercises
 
 
-@router_wod.post('/exercises/', response_model=ExerciseTypeSchema)
+@router_ds.post('/exercises/', response_model=ExerciseTypeSchema)
 async def create_exercise(
         exercise: ExerciseTypeCreate,
         session: AsyncSession = Depends(get_session)
