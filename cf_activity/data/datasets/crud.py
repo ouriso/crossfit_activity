@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Annotated, Type
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from slugify import slugify
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +10,8 @@ from sqlalchemy.sql.elements import or_
 from data import get_session
 from data.datasets.models import BaseDatasetEntity, ExerciseType, \
     ExercisesSetType
-from data.datasets.schemas import DatasetBase, ExerciseTypeSchema, \
-    ExercisesSetTypeSchema
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 class BaseManager(ABC):
@@ -27,12 +27,15 @@ class BaseManager(ABC):
 
     @classmethod
     async def get_object_by_id(
-            cls, async_session: AsyncSession, model_id: int
+            cls, async_session: SessionDep, item_id: int
     ) -> orm_model:
-        result = await async_session.execute(
-            select(cls.orm_model).filter_by(id=model_id)
+        result_stmt = await async_session.execute(
+            select(cls.orm_model).filter_by(id=item_id)
         )
-        return result.scalar()
+        result = result_stmt.scalar()
+        if not result:
+            raise HTTPException(status_code=404, detail="Object not found")
+        return result
 
     @classmethod
     async def get_objects_by_name(

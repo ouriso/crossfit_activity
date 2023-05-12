@@ -1,6 +1,4 @@
-from typing import Mapping
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data import get_session
@@ -14,13 +12,10 @@ router_ds = APIRouter(
 )
 
 
-@router_ds.get('/exercises/{exercise_id}', response_model=ExerciseTypeSchema)
+@router_ds.get('/exercises/{item_id}', response_model=ExerciseTypeSchema)
 async def get_exercise(
-        exercise_id: int, session: AsyncSession = Depends(get_session)
+        exercise: ExerciseType = Depends(ExerciseTypeManager.get_object_by_id)
 ):
-    exercise = await ExerciseTypeManager.get_object_by_id(session, exercise_id)
-    if not exercise:
-        raise HTTPException(status_code=404, detail="Exercise not found")
     return exercise
 
 
