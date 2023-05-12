@@ -45,10 +45,10 @@ async def create_exercise(
     return new_exercise
 
 
-@router_ds.put('/exercises/{exercise_id}', response_model=ExerciseTypeSchema)
+@router_ds.put('/exercises/{item_id}', response_model=ExerciseTypeSchema)
 async def update_exercise(
         update_data: ExerciseTypeUpdate,
-        exercise: ExerciseType = Depends(ExerciseTypeManager.get_schema_by_id),
+        exercise: ExerciseType = Depends(ExerciseTypeManager.get_object_by_id),
         session: AsyncSession = Depends(get_session)
 ) -> ExerciseTypeSchema:
     await ExerciseTypeManager.update_object(

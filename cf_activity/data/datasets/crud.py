@@ -16,14 +16,6 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 class BaseManager(ABC):
     orm_model: Type[BaseDatasetEntity] = None
-    schema_model: Type[DatasetBase] = None
-
-    @classmethod
-    async def get_schema_by_id(cls, model_id: int, async_session: Annotated[
-        AsyncSession, Depends(get_session)]) -> Type[orm_model]:
-        obj = await cls.get_object_by_id(
-            async_session, model_id)
-        return obj
 
     @classmethod
     async def get_object_by_id(
@@ -70,26 +62,24 @@ class BaseManager(ABC):
     @classmethod
     async def update_object(
             cls, async_session: AsyncSession,
-            model_id: int, **new_values
+            item_id: int, **new_values
     ) -> Type[orm_model]:
         await async_session.execute(
-            update(cls.orm_model).filter_by(id=model_id).values(**new_values)
+            update(cls.orm_model).filter_by(id=item_id).values(**new_values)
         )
 
     @classmethod
     async def delete_object(
-            cls, async_session: AsyncSession, model_id: int
+            cls, async_session: AsyncSession, item_id: int
     ) -> None:
         await async_session.execute(
-            delete(cls.orm_model).where(id=model_id)
+            delete(cls.orm_model).where(id=item_id)
         )
 
 
 class ExerciseTypeManager(BaseManager):
     orm_model = ExerciseType
-    schema_model = ExerciseTypeSchema
 
 
 class ExercisesSetTypeManager(BaseManager):
     orm_model = ExercisesSetType
-    schema_model = ExercisesSetTypeSchema
