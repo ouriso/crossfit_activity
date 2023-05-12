@@ -1,9 +1,13 @@
+from typing import Mapping
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data import get_session
 from data.datasets.crud import ExerciseTypeManager
-from data.datasets.schemas import ExerciseTypeCreate, ExerciseTypeSchema
+from data.datasets.models import ExerciseType
+from data.datasets.schemas import ExerciseTypeCreate, ExerciseTypeSchema, \
+    ExerciseTypeUpdate
 
 router_ds = APIRouter(
     prefix='/datasets',
@@ -44,3 +48,17 @@ async def create_exercise(
     await session.commit()
     await session.refresh(new_exercise)
     return new_exercise
+
+
+@router_ds.put('/exercises/{exercise_id}', response_model=ExerciseTypeSchema)
+async def update_exercise(
+        update_data: ExerciseTypeUpdate,
+        exercise: ExerciseType = Depends(ExerciseTypeManager.get_schema_by_id),
+        session: AsyncSession = Depends(get_session)
+) -> ExerciseTypeSchema:
+    await ExerciseTypeManager.update_object(
+        session, exercise.id, **update_data.dict(exclude_unset=True)
+    )
+    await session.commit()
+    await session.refresh(exercise)
+    return exercise

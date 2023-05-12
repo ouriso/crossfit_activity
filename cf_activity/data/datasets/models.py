@@ -19,7 +19,7 @@ class BaseDatasetEntity(DatasetBase):
     id = Column(Integer, Identity(always=True), primary_key=True)
     name = Column(String, nullable=False, unique=True)
     slug_name = Column(String, nullable=False, unique=True,
-                       default=generate_slug_name, onupdate=generate_slug_name)
+                       default=generate_slug_name)
     description = Column(Text, nullable=True)
 
 

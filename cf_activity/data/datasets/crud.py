@@ -1,17 +1,29 @@
 from abc import ABC
-from typing import Type
+from typing import Annotated, Type
 
+from fastapi import Depends
 from slugify import slugify
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import or_
 
+from data import get_session
 from data.datasets.models import BaseDatasetEntity, ExerciseType, \
     ExercisesSetType
+from data.datasets.schemas import DatasetBase, ExerciseTypeSchema, \
+    ExercisesSetTypeSchema
 
 
 class BaseManager(ABC):
     orm_model: Type[BaseDatasetEntity] = None
+    schema_model: Type[DatasetBase] = None
+
+    @classmethod
+    async def get_schema_by_id(cls, model_id: int, async_session: Annotated[
+        AsyncSession, Depends(get_session)]) -> Type[orm_model]:
+        obj = await cls.get_object_by_id(
+            async_session, model_id)
+        return obj
 
     @classmethod
     async def get_object_by_id(
@@ -56,9 +68,9 @@ class BaseManager(ABC):
     async def update_object(
             cls, async_session: AsyncSession,
             model_id: int, **new_values
-    ) -> None:
+    ) -> Type[orm_model]:
         await async_session.execute(
-            update(cls.orm_model).where(id=model_id).values(**new_values)
+            update(cls.orm_model).filter_by(id=model_id).values(**new_values)
         )
 
     @classmethod
@@ -72,7 +84,9 @@ class BaseManager(ABC):
 
 class ExerciseTypeManager(BaseManager):
     orm_model = ExerciseType
+    schema_model = ExerciseTypeSchema
 
 
 class ExercisesSetTypeManager(BaseManager):
     orm_model = ExercisesSetType
+    schema_model = ExercisesSetTypeSchema
