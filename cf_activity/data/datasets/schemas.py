@@ -30,27 +30,3 @@ class Dataset(DatasetBase):
 
     class Config:
         orm_mode = True
-
-
-class ExerciseTypeCreate(DatasetCreate):
-    pass
-
-
-class ExerciseTypeSchema(Dataset):
-    pass
-
-
-class ExerciseTypeUpdate(DatasetUpdate):
-    pass
-
-
-class ExercisesSetTypeCreate(DatasetCreate):
-    pass
-
-
-class ExercisesSetTypeSchema(Dataset):
-    pass
-
-
-class ExercisesSetTypeUpdate(DatasetUpdate):
-    pass
