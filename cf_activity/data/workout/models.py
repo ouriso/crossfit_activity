@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, ForeignKey, \
-    Integer, MetaData, Text, UUID, UniqueConstraint, text
+    Integer, MetaData, String, Text, UUID, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -18,13 +18,24 @@ metadata_workout = MetaData(schema=SCHEMA_WORKOUT,
 WorkoutBase = declarative_base(metadata=metadata_workout)
 
 
-class WorkoutOfDay(WorkoutBase):
-    __tablename__ = 'workout_of_day'
+class HasComment:
+    comment = Column(
+        Text, nullable=True, comment='Комментарий'
+    )
+
+
+class WorkoutEntity(WorkoutBase, HasComment):
+    __abstract__ = True
 
     id = Column(
         UUID(as_uuid=True), primary_key=True,
-        default=uuid.uuid4, comment='идентификатор тренировки'
+        default=uuid.uuid4, comment='Идентификатор'
     )
+
+
+class WorkoutOfDay(WorkoutEntity):
+    __tablename__ = 'workout_of_day'
+
     base_wod_id = Column(
         UUID(as_uuid=True),
         ForeignKey('workout_of_day.id', ondelete='RESTRICT'),
@@ -57,13 +68,9 @@ class WorkoutOfDay(WorkoutBase):
     sets = relationship('ExercisesSet', backref='wod')
 
 
-class ExercisesSet(WorkoutBase):
+class ExercisesSet(WorkoutEntity):
     __tablename__ = 'exercises_set'
 
-    id = Column(
-        UUID(as_uuid=True), primary_key=True,
-        default=uuid.uuid4, comment='идентификатор комплекса'
-    )
     wod_id = Column(
         UUID(as_uuid=True),
         ForeignKey(WorkoutOfDay.id, ondelete='CASCADE'),
@@ -85,11 +92,10 @@ class ExercisesSet(WorkoutBase):
     duration_minutes = Column(
         Integer, nullable=True, comment='длительность выполнения комплекса'
     )
-    comment = Column(
-        Text, nullable=True, comment='комментарий к комплексу'
-    )
+
     exercises = relationship('Exercise', backref='set')
     results = relationship('SetResults', backref='set')
+    set_type = relationship(ExercisesSetType)
 
     __table_args__ = (
         UniqueConstraint('wod_id', 'set_number',
@@ -97,13 +103,9 @@ class ExercisesSet(WorkoutBase):
     )
 
 
-class Exercise(WorkoutBase):
+class Exercise(WorkoutEntity):
     __tablename__ = 'exercise'
 
-    id = Column(
-        UUID(as_uuid=True), primary_key=True,
-        default=uuid.uuid4, comment='идентификатор упражнения'
-    )
     set_id = Column(
         UUID(as_uuid=True),
         ForeignKey(ExercisesSet.id, ondelete='CASCADE'),
@@ -121,22 +123,25 @@ class Exercise(WorkoutBase):
     rounds = Column(
         Integer, nullable=True, comment='количество раундов'
     )
-    weight = Column(
+    work = Column(
         Integer, nullable=True,
-        comment='вес снаряда / дополнительного груза'
+        comment='нагрузка: вес / калории / мощность'
+    )
+    unit_of_work = Column(
+        String(15), nullable=True, default='кг.',
+        comment='единицы измерения нагрузки'
     )
     reps_count = Column(
         Integer, nullable=True,
         comment='количество повторений'
     )
-    duration_minutes = Column(
+    duration_seconds = Column(
         Integer, nullable=True,
-        comment='длительность выполнения'
+        comment='длительность выполнения, сек'
     )
-    comment = Column(
-        Text, nullable=True, comment='комментарий к упражнению'
-    )
+
     results = relationship('ExerciseResults', backref='exercise')
+    exercise_type = relationship(ExerciseType)
 
     __table_args__ = (
         UniqueConstraint('set_id', 'exercise_number',
@@ -144,7 +149,7 @@ class Exercise(WorkoutBase):
     )
 
 
-class SetResults(WorkoutBase):
+class SetResults(WorkoutBase, HasComment):
     __tablename__ = 'set_result'
 
     set_id = Column(
@@ -157,12 +162,9 @@ class SetResults(WorkoutBase):
         Integer, nullable=True,
         comment='длительность выполнения'
     )
-    comment = Column(
-        Text, nullable=True, comment='комментарий к результату комплекса'
-    )
 
 
-class ExerciseResults(WorkoutBase):
+class ExerciseResults(WorkoutBase, HasComment):
     __tablename__ = 'exercise_result'
 
     exercise_id = Column(
@@ -182,7 +184,4 @@ class ExerciseResults(WorkoutBase):
     duration_minutes = Column(
         ARRAY(Integer), nullable=True,
         comment='список длительности выполнения в каждом подходе'
-    )
-    comment = Column(
-        Text, nullable=True, comment='комментарий к результату упражнения'
     )
