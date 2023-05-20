@@ -1,15 +1,13 @@
 from abc import ABC
-from typing import Annotated, Type, Union
+from typing import Type, Union
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
 
-from data import get_session
-
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
+from data import SessionDep
 
 
 class BaseManager(ABC):
