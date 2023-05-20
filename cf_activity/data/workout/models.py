@@ -63,9 +63,12 @@ class WorkoutOfDay(WorkoutEntity):
         BigInteger, ForeignKey(User.id, ondelete='CASCADE'),
     )
 
-    base_wod = relationship('WorkoutOfDay', backref='child_wods')
-    user = relationship('User', backref='wods')
-    sets = relationship('ExercisesSet', backref='wod')
+    # base_wod = relationship('WorkoutOfDay', remote_side=[WorkoutEntity.id])
+    # user = relationship('User', backref='wods')
+    sets = relationship(
+        'ExercisesSet', back_populates='wod', lazy='selectin',
+        order_by='ExercisesSet.set_number'
+    )
 
 
 class ExercisesSet(WorkoutEntity):
@@ -93,8 +96,13 @@ class ExercisesSet(WorkoutEntity):
         Integer, nullable=True, comment='длительность выполнения комплекса'
     )
 
-    exercises = relationship('Exercise', backref='set')
-    results = relationship('SetResults', backref='set')
+    wod = relationship('WorkoutOfDay', back_populates='sets',
+                       lazy='selectin')
+    exercises = relationship(
+        'Exercise', back_populates='set', lazy='selectin',
+        order_by='Exercise.exercise_number'
+    )
+    results = relationship('SetResults')
     set_type = relationship(ExercisesSetType)
 
     __table_args__ = (
@@ -140,7 +148,8 @@ class Exercise(WorkoutEntity):
         comment='длительность выполнения, сек'
     )
 
-    results = relationship('ExerciseResults', backref='exercise')
+    set = relationship('ExercisesSet', back_populates='exercises')
+    # results = relationship('ExerciseResults', backref='exercise')
     exercise_type = relationship(ExerciseType)
 
     __table_args__ = (
