@@ -11,12 +11,12 @@ python = "^3.11"
 sqlalchemy = "^2.0.9"
 python-slugify = "^8.0.1"
 alembic = "^1.10.3"
-psycopg = "^3.1.8"
 fastapi = "^0.103.2"
 cmake = "^3.26.3"
 uvicorn = "^0.23.2"
 pydantic = "^2.4.2"
 black = "^23.3.0"
+psycopg = {extras = ["binary"], version = "^3.1.12"}
 
 
 [build-system]
