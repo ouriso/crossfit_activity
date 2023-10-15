@@ -23,14 +23,14 @@ class BaseDatasetEntity(DatasetBase):
     description = Column(Text, nullable=True)
 
 
-class ExerciseType(BaseDatasetEntity):
+class DictExerciseOrm(BaseDatasetEntity):
     """Type of exercise."""
-    __tablename__ = 'exercise_type'
+    __tablename__ = 'dict_exercises'
 
 
-class ExercisesSetType(BaseDatasetEntity):
+class DictSupersetOrm(BaseDatasetEntity):
     """Type of set of exercises."""
-    __tablename__ = 'exercises_set_type'
+    __tablename__ = 'dict_supersets'
 
 
 class Difficulty(Enum):
@@ -45,3 +45,8 @@ class TrainingTypes(Enum):
     ENDURANCE = 'endurance'
     FULL_BODY = 'full_body'
     GYM = 'gymnastics'
+
+
+class DictUnitOrm(BaseDatasetEntity):
+    """Work units."""
+    __tablename__ = 'dict_units'

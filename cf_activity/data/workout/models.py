@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 from data import NAMING_CONVENTION
-from data.datasets.models import Difficulty, ExerciseType, ExercisesSetType, \
+from data.datasets.models import Difficulty, DictExerciseOrm, DictSupersetOrm, \
     TrainingTypes
 from data.user.models import User
 
@@ -34,7 +34,7 @@ class WorkoutEntity(WorkoutBase, HasComment):
 
 
 class WorkoutOfDay(WorkoutEntity):
-    __tablename__ = 'workout_of_day'
+    __tablename__ = 'workouts_of_day'
 
     base_wod_id = Column(
         UUID(as_uuid=True),
@@ -66,13 +66,13 @@ class WorkoutOfDay(WorkoutEntity):
     # base_wod = relationship('WorkoutOfDay', remote_side=[WorkoutEntity.id])
     # user = relationship('User', backref='wods')
     sets = relationship(
-        'ExercisesSet', back_populates='wod', lazy='selectin',
-        order_by='ExercisesSet.set_number'
+        'WodSupersetOrm', back_populates='wod', lazy='selectin',
+        order_by='WodSupersetOrm.set_number'
     )
 
 
-class ExercisesSet(WorkoutEntity):
-    __tablename__ = 'exercises_set'
+class WodSupersetOrm(WorkoutEntity):
+    __tablename__ = 'wod_supersets'
 
     wod_id = Column(
         UUID(as_uuid=True),
@@ -85,7 +85,7 @@ class ExercisesSet(WorkoutEntity):
         comment='порядковый номер комплекса в тренировке'
     )
     set_type_id = Column(
-        Integer, ForeignKey(ExercisesSetType.id, ondelete='RESTRICT'),
+        Integer, ForeignKey(DictSupersetOrm.id, ondelete='RESTRICT'),
         nullable=True, comment=(
             'id названия комплекса')
     )
@@ -103,7 +103,7 @@ class ExercisesSet(WorkoutEntity):
         order_by='Exercise.exercise_number'
     )
     results = relationship('SetResults')
-    set_type = relationship(ExercisesSetType)
+    set_type = relationship(DictSupersetOrm)
 
     __table_args__ = (
         UniqueConstraint('wod_id', 'set_number',
@@ -111,12 +111,12 @@ class ExercisesSet(WorkoutEntity):
     )
 
 
-class Exercise(WorkoutEntity):
-    __tablename__ = 'exercise'
+class SupersetExerciseOrm(WorkoutEntity):
+    __tablename__ = 'superset_exercises'
 
     set_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(ExercisesSet.id, ondelete='CASCADE'),
+        ForeignKey(WodSupersetOrm.id, ondelete='CASCADE'),
         nullable=True, comment=(
             'идентификатор комплекса, в который входит упражнение')
     )
@@ -125,7 +125,7 @@ class Exercise(WorkoutEntity):
         comment='порядковый номер упражнения в комплексе'
     )
     exercise_type_id = Column(
-        Integer, ForeignKey(ExerciseType.id, ondelete='RESTRICT'),
+        Integer, ForeignKey(DictExerciseOrm.id, ondelete='RESTRICT'),
         nullable=False, comment='id типа тренировки'
     )
     rounds = Column(
@@ -148,9 +148,9 @@ class Exercise(WorkoutEntity):
         comment='длительность выполнения, сек'
     )
 
-    set = relationship('ExercisesSet', back_populates='exercises')
+    set = relationship('WodSupersetOrm', back_populates='exercises')
     # results = relationship('ExerciseResults', backref='exercise')
-    exercise_type = relationship(ExerciseType)
+    exercise_type = relationship(DictExerciseOrm)
 
     __table_args__ = (
         UniqueConstraint('set_id', 'exercise_number',
@@ -159,11 +159,11 @@ class Exercise(WorkoutEntity):
 
 
 class SetResults(WorkoutBase, HasComment):
-    __tablename__ = 'set_result'
+    __tablename__ = 'wod_superset_results'
 
     set_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(ExercisesSet.id, ondelete='CASCADE'),
+        ForeignKey(WodSupersetOrm.id, ondelete='CASCADE'),
         primary_key=True, comment=(
             'идентификатор комплекса, для которого записывается результат')
     )
@@ -173,12 +173,12 @@ class SetResults(WorkoutBase, HasComment):
     )
 
 
-class ExerciseResults(WorkoutBase, HasComment):
-    __tablename__ = 'exercise_result'
+class SupersetExerciseResults(WorkoutBase, HasComment):
+    __tablename__ = 'superset_exercise_results'
 
     exercise_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(Exercise.id, ondelete='CASCADE'),
+        ForeignKey(SupersetExerciseOrm.id, ondelete='CASCADE'),
         primary_key=True, comment=(
             'идентификатор упражнения, для которого записывается результат')
     )

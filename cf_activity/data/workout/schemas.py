@@ -2,7 +2,6 @@ import uuid
 from datetime import date
 
 from pydantic import BaseModel, Field
-from pydantic.types import UUID
 
 from data.datasets.models import Difficulty, TrainingTypes
 from data.datasets.schemas import Dataset
@@ -67,7 +66,7 @@ class ExercisesSet(ExerciseBase):
 
 
 class WorkoutOfDayBase(BaseModel):
-    base_wod_id: UUID | None
+    base_wod_id: uuid.UUID | None
     training_type: TrainingTypes = TrainingTypes.ENDURANCE
     difficulty: Difficulty = Difficulty.NORMAL
     action_date: date = date.today()
@@ -85,7 +84,7 @@ class WorkoutOfDayUpdate(WorkoutOfDayBase):
 
 
 class WorkoutOfDay(WorkoutOfDayBase):
-    id: UUID
+    id: uuid.UUID
     user_id: int = Field(..., exclude=True)
     sets: list[ExercisesSet] | None
 
