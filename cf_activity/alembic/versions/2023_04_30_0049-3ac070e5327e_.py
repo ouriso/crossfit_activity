@@ -57,9 +57,9 @@ def upgrade() -> None:
         type_="foreignkey",
     )
     op.drop_constraint("pk_exercise_type", "exercise_type",
-                       "primary", "datasets")
+                       "primary", schema="datasets")
     op.create_primary_key("pk_exercise_type", "exercise_type", ["id"],
-                          "datasets")
+                          schema="datasets")
     op.create_foreign_key(
         op.f("fk_exercise_exercise_type_id_exercise_type"),
         "exercise",
@@ -88,9 +88,9 @@ def upgrade() -> None:
         type_="foreignkey",
     )
     op.drop_constraint("pk_exercises_set_type", "exercises_set_type",
-                       "primary", "datasets")
+                       "primary", schema="datasets")
     op.create_primary_key("pk_exercises_set_type", "exercises_set_type",
-                          ["id"], "datasets")
+                          ["id"], schema="datasets")
     op.create_foreign_key(
         op.f("fk_exercises_set_set_type_id_exercises_set_type"),
         "exercises_set",
