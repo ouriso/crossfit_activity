@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from slugify import slugify
 
 
@@ -10,7 +10,7 @@ class DatasetBase(BaseModel):
     description: Optional[str]
 
     @classmethod
-    @validator('slug_name', pre=True, always=True)
+    @field_validator('slug_name', 'name')
     def check_slug(cls, v, *, values):
         if not values.get('name') and not v:
             return None
