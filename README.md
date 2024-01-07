@@ -62,6 +62,6 @@ docker run --name postgres \
 
 # Alembic
 ```
-alembic revision --autogenerate
+alembic revision --autogenerate -m "<Comment>"
 alembic upgrade head 
 ```
