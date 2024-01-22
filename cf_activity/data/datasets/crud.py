@@ -9,7 +9,7 @@ from sqlalchemy.sql.elements import or_
 from data import get_session
 from data.crud_base import BaseManager
 from data.datasets.models import BaseDatasetEntity, DictExerciseOrm, \
-    DictSupersetOrm
+    DictWodTypeOrm
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
@@ -36,4 +36,4 @@ class DictExerciseManager(DatasetManager):
 
 
 class DictSupersetManager(DatasetManager):
-    orm_model = DictSupersetOrm
+    orm_model = DictWodTypeOrm

@@ -1,14 +1,14 @@
 import uuid
 
 from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, ForeignKey, \
-    Integer, MetaData, String, Text, UUID, UniqueConstraint, text
+    Integer, MetaData, String, Text, UUID, UniqueConstraint, text, Time
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 from data import NAMING_CONVENTION
-from data.datasets.models import Difficulty, DictExerciseOrm, DictSupersetOrm, \
-    TrainingTypes
+from data.datasets.models import (DictDifficultyOrm, DictExerciseOrm,
+                                  DictWodTypeOrm, DictUnitOrm)
 from data.user.models import User
 
 SCHEMA_WORKOUT = 'workout'
@@ -18,82 +18,104 @@ metadata_workout = MetaData(schema=SCHEMA_WORKOUT,
 WorkoutBase = declarative_base(metadata=metadata_workout)
 
 
-class HasComment:
-    comment = Column(
-        Text, nullable=True, comment='Комментарий'
-    )
-
-
-class WorkoutEntity(WorkoutBase, HasComment):
+class WorkoutEntity(WorkoutBase):
     __abstract__ = True
 
     id = Column(
         UUID(as_uuid=True), primary_key=True,
         default=uuid.uuid4, comment='Идентификатор'
     )
+    comment = Column(
+        Text, nullable=True, comment='Комментарий'
+    )
+
+
+class Crossfitter(WorkoutBase):
+    __tablename__ = 'dim_crossfitters'
+
+    id_crossfitter = Column(BigInteger, ForeignKey(User.id), primary_key=True)
+    birthday = Column(Date, nullable=True, comment='Дата рождения')
+    height_sm = Column(Integer, nullable=True, comment='Рост в сантиметрах')
+    gender = Column(String, nullable=True, comment='Пол')
+    in_sport_since = Column(
+        Integer, nullable=True, comment='С какого года в спорте'
+    )
 
 
 class WorkoutOfDay(WorkoutEntity):
-    __tablename__ = 'workouts_of_day'
+    __tablename__ = 'dim_workouts'
 
-    base_wod_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('workout_of_day.id', ondelete='RESTRICT'),
-        nullable=True, comment='идентификатор тренировки от тренера'
+    id_instructor = Column(
+        BigInteger, ForeignKey(User.id), comment='идентификатор инструктора'
     )
-    training_type = Column(
-        Enum(TrainingTypes),
-        default=TrainingTypes.ENDURANCE, nullable=False,
-        comment='тип тренировки'
+    id_difficulty = Column(
+        Integer,
+        ForeignKey(DictDifficultyOrm.id), nullable=False,
+        comment='сложность тренировки по мнению тренера'
     )
-    difficulty = Column(
-        Enum(Difficulty),
-        default=Difficulty.NORMAL, nullable=False,
-        comment='субъективная сложность тренировки'
-    )
-    action_date = Column(
+    wod_date = Column(
         Date, default=text('CURRENT_TIMESTAMP'),
         comment='дата проведения тренировки', nullable=False
     )
+    wod_time = Column(
+        Time, comment='время проведения тренировки', nullable=True
+    )
+    wod_requirement_level = Column(String, nullable=True)
+    wod_place = Column(String, nullable=True)
     creation_date = Column(
         DateTime, server_default=text('CURRENT_TIMESTAMP'),
         comment='дата создания тренировки'
     )
-    user_id = Column(
-        BigInteger, ForeignKey(User.id, ondelete='CASCADE'),
-    )
 
-    # base_wod = relationship('WorkoutOfDay', remote_side=[WorkoutEntity.id])
-    # user = relationship('User', backref='wods')
     sets = relationship(
-        'WodSupersetOrm', back_populates='wod', lazy='selectin',
-        order_by='WodSupersetOrm.set_number'
+        'WodEntityOrm', back_populates='wod', lazy='selectin',
+        order_by='WodEntityOrm.set_number'
     )
 
 
-class WodSupersetOrm(WorkoutEntity):
-    __tablename__ = 'wod_supersets'
+class WodEntityOrm(WorkoutEntity):
+    __tablename__ = 'dim_wod_entities'
 
-    wod_id = Column(
+    id_wod = Column(
         UUID(as_uuid=True),
-        ForeignKey(WorkoutOfDay.id, ondelete='CASCADE'),
-        nullable=True, comment=(
+        ForeignKey(WorkoutOfDay.id, ondelete='RESTRICT'),
+        nullable=False, comment=(
             'идентификатор тренировки, в которую входит комплекс')
     )
-    set_number = Column(
+    id_wod_entity_parent = Column(
+        UUID(as_uuid=True), ForeignKey('WodEntityOrm.id')
+    )
+    id_wod_type = Column(
+        Integer, ForeignKey(DictWodTypeOrm.id, ondelete='RESTRICT'),
+        nullable=True, comment='id названия комплекса'
+    )
+    id_exercise = Column(
+        Integer, ForeignKey(DictExerciseOrm.id, ondelete='RESTRICT'),
+        nullable=True, comment='id названия упражнения'
+    )
+    order_number = Column(
         Integer, nullable=True,
-        comment='порядковый номер комплекса в тренировке'
+        comment='порядковый номер сущности'
     )
-    set_type_id = Column(
-        Integer, ForeignKey(DictSupersetOrm.id, ondelete='RESTRICT'),
-        nullable=True, comment=(
-            'id названия комплекса')
+    variation = Column(
+        Integer, nullable=True,
+        comment='вариант исполнения (для разных кроссфиттеров)'
     )
-    rounds = Column(
+    requirement_rounds_number = Column(
         Integer, nullable=True, comment='количество раундов'
     )
-    duration_minutes = Column(
+    requirement_duration_sec = Column(
         Integer, nullable=True, comment='длительность выполнения комплекса'
+    )
+    requirement_work_amount = Column(
+        Integer, nullable=True, comment='объем нагрузки'
+    )
+    id_work_units = Column(
+        Integer, ForeignKey(DictUnitOrm.id), nullable=True,
+        comment='единицы измерения объема нагрузки'
+    )
+    requirement_reps_amount = Column(
+        Integer, nullable=True, comment='количество повторений'
     )
 
     wod = relationship('WorkoutOfDay', back_populates='sets',
@@ -103,7 +125,7 @@ class WodSupersetOrm(WorkoutEntity):
         order_by='Exercise.exercise_number'
     )
     results = relationship('SetResults')
-    set_type = relationship(DictSupersetOrm)
+    set_type = relationship(DictWodTypeOrm)
 
     __table_args__ = (
         UniqueConstraint('wod_id', 'set_number',
@@ -111,86 +133,16 @@ class WodSupersetOrm(WorkoutEntity):
     )
 
 
-class SupersetExerciseOrm(WorkoutEntity):
-    __tablename__ = 'superset_exercises'
-
-    set_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey(WodSupersetOrm.id, ondelete='CASCADE'),
-        nullable=True, comment=(
-            'идентификатор комплекса, в который входит упражнение')
-    )
-    exercise_number = Column(
-        Integer, nullable=True,
-        comment='порядковый номер упражнения в комплексе'
-    )
-    exercise_type_id = Column(
-        Integer, ForeignKey(DictExerciseOrm.id, ondelete='RESTRICT'),
-        nullable=False, comment='id типа тренировки'
-    )
-    rounds = Column(
-        Integer, nullable=True, comment='количество раундов'
-    )
-    work = Column(
-        Integer, nullable=True,
-        comment='нагрузка: вес / калории / мощность'
-    )
-    unit_of_work = Column(
-        String(15), nullable=True, default='кг.',
-        comment='единицы измерения нагрузки'
-    )
-    reps_count = Column(
-        Integer, nullable=True,
-        comment='количество повторений'
-    )
-    duration_seconds = Column(
-        Integer, nullable=True,
-        comment='длительность выполнения, сек'
-    )
-
-    set = relationship('WodSupersetOrm', back_populates='exercises')
-    # results = relationship('ExerciseResults', backref='exercise')
-    exercise_type = relationship(DictExerciseOrm)
-
-    __table_args__ = (
-        UniqueConstraint('set_id', 'exercise_number',
-                         name='set_exercise_num_uq'),
-    )
-
-
-class SetResults(WorkoutBase, HasComment):
+class SetResults(WorkoutBase):
     __tablename__ = 'wod_superset_results'
 
     set_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(WodSupersetOrm.id, ondelete='CASCADE'),
+        ForeignKey(WodEntityOrm.id, ondelete='CASCADE'),
         primary_key=True, comment=(
             'идентификатор комплекса, для которого записывается результат')
     )
     duration_minutes = Column(
         Integer, nullable=True,
         comment='длительность выполнения'
-    )
-
-
-class SupersetExerciseResults(WorkoutBase, HasComment):
-    __tablename__ = 'superset_exercise_results'
-
-    exercise_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey(SupersetExerciseOrm.id, ondelete='CASCADE'),
-        primary_key=True, comment=(
-            'идентификатор упражнения, для которого записывается результат')
-    )
-    weights = Column(
-        ARRAY(Integer), nullable=True,
-        comment='список весов снаряда / дополнительного груза в каждом подходе'
-    )
-    reps_counts = Column(
-        ARRAY(Integer), nullable=True,
-        comment='список количества повторений в каждом подходе'
-    )
-    duration_minutes = Column(
-        ARRAY(Integer), nullable=True,
-        comment='список длительности выполнения в каждом подходе'
     )

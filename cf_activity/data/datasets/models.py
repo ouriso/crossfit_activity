@@ -1,10 +1,7 @@
-from enum import Enum
-
 from sqlalchemy import Column, Identity, Integer, MetaData, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 from data import NAMING_CONVENTION
-from data.datasets.utils import generate_slug_name
 
 SCHEMA_DATASETS = 'datasets'
 
@@ -17,10 +14,10 @@ class BaseDatasetEntity(DatasetBase):
     __abstract__ = True
 
     id = Column(Integer, Identity(always=True), primary_key=True)
-    name = Column(String, nullable=False, unique=True)
-    slug_name = Column(String, nullable=False, unique=True,
-                       default=generate_slug_name)
-    description = Column(Text, nullable=True)
+    name = Column(
+        String, nullable=False, unique=True, comment='Название сущности'
+    )
+    description = Column(Text, nullable=True, comment='Описание сущности')
 
 
 class DictExerciseOrm(BaseDatasetEntity):
@@ -28,25 +25,20 @@ class DictExerciseOrm(BaseDatasetEntity):
     __tablename__ = 'dict_exercises'
 
 
-class DictSupersetOrm(BaseDatasetEntity):
+class DictWodTypeOrm(BaseDatasetEntity):
     """Type of set of exercises."""
-    __tablename__ = 'dict_supersets'
+    __tablename__ = 'dict_wod_types'
 
 
-class Difficulty(Enum):
-    EASY = 'easy'
-    NORMAL = 'normal'
-    HARD = 'hard'
-    HELL = 'hell'
-
-
-class TrainingTypes(Enum):
-    POWER = 'power'
-    ENDURANCE = 'endurance'
-    FULL_BODY = 'full_body'
-    GYM = 'gymnastics'
+class DictDifficultyOrm(BaseDatasetEntity):
+    """Training difficulty."""
+    __tablename__ = 'dict_difficulties'
 
 
 class DictUnitOrm(BaseDatasetEntity):
     """Work units."""
     __tablename__ = 'dict_units'
+
+    symbol = Column(
+        String, nullable=True, comment='Символ для единицы измерения'
+    )

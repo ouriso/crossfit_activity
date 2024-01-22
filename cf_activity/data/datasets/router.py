@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data import get_session
 from data.datasets.crud import DictExerciseManager, DictSupersetManager
-from data.datasets.models import DictExerciseOrm, DictSupersetOrm
+from data.datasets.models import DictExerciseOrm, DictWodTypeOrm
 from data.datasets.schemas import DatasetCreate, Dataset, DatasetUpdate
 
 router_ds = APIRouter(
@@ -64,7 +64,7 @@ async def update_exercise(
 
 @router_ds.get('/sets/{item_id}', response_model=Dataset)
 async def get_exercises_set(
-        exercises_set: DictSupersetOrm = Depends(
+        exercises_set: DictWodTypeOrm = Depends(
             DictSupersetManager.get_object_by_id)
 ):
     return exercises_set

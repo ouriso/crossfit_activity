@@ -3,7 +3,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from data.datasets.models import Difficulty, TrainingTypes
+from data.datasets.models import DictDifficultyOrm, TrainingTypes
 from data.datasets.schemas import Dataset
 
 
@@ -68,7 +68,7 @@ class ExercisesSet(ExerciseBase):
 class WorkoutOfDayBase(BaseModel):
     base_wod_id: uuid.UUID | None
     training_type: TrainingTypes = TrainingTypes.ENDURANCE
-    difficulty: Difficulty = Difficulty.NORMAL
+    difficulty: DictDifficultyOrm = DictDifficultyOrm.NORMAL
     action_date: date = date.today()
     comment: str | None
 
@@ -79,7 +79,7 @@ class WorkoutOfDayCreate(WorkoutOfDayBase):
 
 class WorkoutOfDayUpdate(WorkoutOfDayBase):
     training_type: TrainingTypes | None
-    difficulty: Difficulty | None
+    difficulty: DictDifficultyOrm | None
     action_date: date | None
 
 
